@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>JJK Domain Expansion</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+  <style>
+    body { margin:0; background:black; overflow:hidden; }
+
+    canvas {
+      position:absolute;
+      top:0;
+      left:0;
+    }
+
+    #domain {
+      position:absolute;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      color:red;
+      font-size:50px;
+      display:none;
+      text-shadow:0 0 30px red, 0 0 60px red;
+    }
+  </style>
+</head>
+
+<body>
+
+<video id="video" style="display:none;"></video>
+<canvas id="canvas"></canvas>
+<div id="domain">DOMAIN EXPANSION</div>
+
+<script>
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const domain = document.getElementById('domain');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const hands = new Hands({
+  locateFile: file => https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}
+});
+
+hands.setOptions({
+  maxNumHands: 1,
+  minDetectionConfidence: 0.7,
+  minTrackingConfidence: 0.7
+});
+
+// ✊ Yumruk kontrolü
+function isFist(hand) {
+  let count = 0;
+
+  // parmak uçları (8,12,16,20)
+  const tips = [8,12,16,20];
+
+  tips.forEach(i => {
+    if (hand[i].y > hand[i-2].y) count++;
+  });
+
+  return count >= 3;
+}
+
+hands.onResults(results => {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  if (results.multiHandLandmarks.length > 0) {
+    const hand = results.multiHandLandmarks[0];
+
+    if (isFist(hand)) {
+      domain.style.display = "block";
+
+      // 🔥 kırmızı aura efekti
+      ctx.fillStyle = "rgba(255,0,0,0.2)";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    } else {
+      domain.style.display = "none";
+    }
+  }
+});
+
+const camera = new Camera(video, {
+  onFrame: async () => {
+    await hands.send({image: video});
+  },
+  width: 640,
+  height: 480
+});
+
+camera.start();
+</script>
+
+</body>
+</html>
